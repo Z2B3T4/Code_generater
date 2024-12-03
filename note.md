@@ -347,3 +347,227 @@ public static void main(String[] args) throws IOException, TemplateException {
 
 ### 4.1 快速入门
 
+入门demo，注释都在上面了
+
+```java
+package com.yupi.cli.example;
+
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
+
+// @Command 表明当前的类是要作为cli管理的，name是自己为这个命令行起的名字
+// version 指定版本，一般目前（2024.12.3）都指定这个，mixinStandardHelpOptions = true表示自动生成帮助文档
+@Command(name = "ASCIIArt", version = "ASCIIArt 1.0", mixinStandardHelpOptions = true) 
+public class ASCIIArt implements Runnable { 
+
+    // 这个就是动态可以把 -s 20 将这个20赋值给fontSize
+    @Option(names = { "-s", "--font-size" }, description = "Font size") 
+    int fontSize = 19;
+
+    // 这个就是用户输入的这种 aaa bbb 就是这种不带-的进行赋值给数组
+    @Parameters(paramLabel = "<word>", defaultValue = "Hello, picocli", 
+               description = "Words to be translated into ASCII art.")
+    private String[] words = { "Hello,", "picocli" }; 
+
+    // 这个就是当永辉回车的时候，执行这个run方法
+    @Override
+    public void run() {
+        // 自己实现业务逻辑
+        System.out.println("fontSize = " + fontSize);
+        System.out.println("words = " + String.join(",", words));
+    }
+
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new ASCIIArt()).execute(args); 
+        System.exit(exitCode); 
+    }
+}
+```
+
+### 4.2 基本用法
+
+首先是
+
+```
+@Option(names = { "-s", "--font-size" }, description = "Font size",required = true) 
+```
+
+这个required是是否必填
+
+如果想要接受多个值，就用数组接受就可以，天然支持 eg: -s 1 2 3 4 那么1 2 3 4 都会个font
+
+```
+@Option(names = { "-s", "--font-size" }, description = "Font size",required = true) 
+int[] font;
+```
+
+还有
+
+```
+@Parameters(paramLabel = "<word>", defaultValue = "Hello, picocli", 
+               description = "Words to be translated into ASCII art.")
+```
+
+其他用法可以看
+
+[picocli-入门-CSDN博客](https://blog.csdn.net/it_freshman/article/details/125458116)
+
+### 4.3 交互式能力
+
+#### 交互属性interactive
+
+基本的交互能力只需要在注解中加入  interactive = true
+
+例如
+
+```java
+@Option(names = {"-p", "--password"}, description = "Passphrase", interactive = true)
+String password;
+```
+
+#### 是否显示输入echo
+
+可以使用**echo属性来控制是否显示用户的输入**
+
+例如
+
+```java
+@Option(names = {"-p", "--password"}, description = "Passphrase", interactive = true,echo = true,prompt="请输入密码")
+String password;
+```
+
+#### 控制可以接受几个参数 arity 属性
+
+此时意思就是这个既可以接受0个参数或者1个参数
+
+```java
+@Option(names = {"-p", "--password"},
+        description = "Passphrase", 
+        interactive = true,
+        arity = "0..1"
+)
+String password;
+```
+
+随后调用的时候就可以这样子
+
+```java
+new CommandLine(new Login()).execute("-u", "user123", "-p","xxx","-cp");
+```
+
+**主要是应用在不需要用户输入任何，就是直接复制过来就能用的那种场景**
+
+**建议为所有的属性都加上**
+
+#### 怎样强制用户输入但是用户有无需输入-p，-u这种
+其中一种解决方案就是，在main函数中的args参数中判断，如果用户输入的里面没有那个，就把那个用数组拼接的形式补上
+
+### 4.4 子命令
+
+**就是把子命令的那个类引进来** 两种方法
+
+第一种
+
+```java
+@Command(subcommands = {
+    GitStatus.class,
+    GitCommit.class,
+    GitAdd.class,
+    GitBranch.class,
+    GitCheckout.class,
+    GitClone.class,
+    GitDiff.class,
+    GitMerge.class,
+    GitPush.class,
+    GitRebase.class,
+    GitTag.class
+})
+public class Git { /* ... */ }
+
+```
+
+第二种
+
+```java
+CommandLine commandLine = new CommandLine(new Git())
+        .addSubcommand("status",   new GitStatus())
+        .addSubcommand("commit",   new GitCommit())
+        .addSubcommand("add",      new GitAdd())
+        .addSubcommand("branch",   new GitBranch())
+        .addSubcommand("checkout", new GitCheckout())
+        .addSubcommand("clone",    new GitClone())
+        .addSubcommand("diff",     new GitDiff())
+        .addSubcommand("merge",    new GitMerge())
+        .addSubcommand("push",     new GitPush())
+        .addSubcommand("rebase",   new GitRebase())
+        .addSubcommand("tag",      new GitTag());
+
+```
+
+示例代码
+
+```java
+package com.yupi.cli.example;
+
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+
+@Command(name = "main", mixinStandardHelpOptions = true)
+public class SubCommandExample implements Runnable {
+
+    @Override
+    public void run() {
+        System.out.println("执行主命令");
+    }
+
+    @Command(name = "add", description = "增加", mixinStandardHelpOptions = true)
+    static class AddCommand implements Runnable {
+        public void run() {
+            System.out.println("执行增加命令");
+        }
+    }
+
+    @Command(name = "delete", description = "删除", mixinStandardHelpOptions = true)
+    static class DeleteCommand implements Runnable {
+        public void run() {
+            System.out.println("执行删除命令");
+        }
+    }
+
+    @Command(name = "query", description = "查询", mixinStandardHelpOptions = true)
+    static class QueryCommand implements Runnable {
+        public void run() {
+            System.out.println("执行查询命令");
+        }
+    }
+
+    public static void main(String[] args) {
+        // 执行主命令
+        String[] myArgs = new String[] { };
+        // 查看主命令的帮助手册
+//        String[] myArgs = new String[] { "--help" };
+        // 执行增加命令
+//        String[] myArgs = new String[] { "add" };
+        // 执行增加命令的帮助手册
+//        String[] myArgs = new String[] { "add", "--help" };
+        // 执行不存在的命令，会报错
+//        String[] myArgs = new String[] { "update" };
+        int exitCode = new CommandLine(new SubCommandExample())
+                .addSubcommand(new AddCommand())
+                .addSubcommand(new DeleteCommand())
+                .addSubcommand(new QueryCommand())
+                .execute(myArgs);
+        System.exit(exitCode);
+    }
+}
+
+```
+
+更多内容参见，官网
+
+这个颜色高亮的[picocli - a mighty tiny command line interface](https://picocli.info/#_ansi_colors_and_styles)
+
+这个的错误处理[picocli - a mighty tiny command line interface](https://picocli.info/#_handling_errors)
+
