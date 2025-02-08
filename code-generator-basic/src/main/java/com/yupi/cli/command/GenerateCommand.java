@@ -18,7 +18,8 @@ public class GenerateCommand implements Callable<Integer> {
     @CommandLine.Option(names = {"-l", "--loop"},
             description = "循环",
             interactive = true,
-            arity = "0..1"
+            arity = "0..1",
+            echo = true
     )
     private boolean loop = true;
 
@@ -28,7 +29,8 @@ public class GenerateCommand implements Callable<Integer> {
     @CommandLine.Option(names = {"-a", "--author"},
             description = "作者",
             interactive = true,
-            arity = "0..1"
+            arity = "0..1",
+            echo = true
     )
     private String author = "zbt";
 
@@ -38,7 +40,8 @@ public class GenerateCommand implements Callable<Integer> {
     @CommandLine.Option(names = {"-t", "--text"},
             description = "输入文本",
             interactive = true,
-            arity = "0..1"
+            arity = "0..1",
+            echo = true
     )
     private String outputText = "zbt学编程";
 

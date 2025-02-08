@@ -571,3 +571,41 @@ public class SubCommandExample implements Runnable {
 
 这个的错误处理[picocli - a mighty tiny command line interface](https://picocli.info/#_handling_errors)
 
+### 详细使用案例参见D盘codegengrator的练习部分
+
+## 5. 第一阶段完结，运行所写
+
+首先是要将写的代码打成jar包，注意要选择名称长的那个，那个有依赖也打进去了
+
+然后写一个脚本替代 java -jar <jar包名称> -l 等等
+
+linux下用这个
+
+```
+#!/bin/bash
+java -jar target/code-generator-basic-1.0-SNAPSHOT-jar-with-dependencies.jar "$@"
+```
+
+windows下用这个
+
+```
+@echo off
+java -jar target/code-generator-basic-1.0-SNAPSHOT-jar-with-dependencies.jar %*
+
+```
+
+**其实windows下的git bash就是linux运行环境**
+
+
+
+
+
+## 第二阶段 生成代码生成器的生成器
+
+### 1 元信息
+
+原信息，一句话概括就是为了防止硬编码，然后把那些原来硬编码的地方用配置文件的形式卸下来
+
+#### 这里推荐插一个好用的插件
+
+就是gsonformatplus，他可以把json文件中的内容映射出java类
